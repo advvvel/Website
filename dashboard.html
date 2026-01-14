@@ -3,7 +3,7 @@
 <head>
     <title>Advanced Recipe Dashboard</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #49bc96; padding: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; }
         
         /* Layout for the Recipe Cards */
@@ -13,7 +13,7 @@
         .card-content { padding: 20px; }
         
         /* Sections inside the card */
-        .section-title { font-weight: bold; color: #143e1e; margin-top: 15px; border-bottom: 1px solid #eee; }
+        .section-title { font-weight: bold; color: #28a745; margin-top: 15px; border-bottom: 1px solid #eee; }
         .steps-list { padding-left: 20px; }
         
         /* Modal Styling */
@@ -21,8 +21,8 @@
         .modal-content { background: white; margin: 5% auto; padding: 30px; border-radius: 15px; width: 500px; }
         input, textarea { width: 100%; margin: 8px 0; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
         
-        .btn-save { background: #52d571; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-size: 16px; }
-        .btn-delete { background: #ad2121; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        .btn-save { background: #28a745; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-size: 16px; }
+        .btn-delete { background: #ff4d4d; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -35,7 +35,7 @@
     <div id="recipeList"></div>
 
     <div id="recipeModal" class="modal">
-        <div class="modal -content">
+        <div class="modal-content">
             <h2 id="modalTitle">New Recipe</h2>
             <input type="hidden" id="editIndex">
             
