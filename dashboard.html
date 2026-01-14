@@ -1,57 +1,74 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Recipe Dashboard</title>
+    <title>Advanced Recipe Dashboard</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; }
         
-        /* Recipe Cards */
-        #recipeList { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; }
-        .card h3 { margin-top: 0; color: #28a745; }
-        .card-btns { margin-top: 15px; display: flex; gap: 10px; }
+        /* Layout for the Recipe Cards */
+        #recipeList { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; margin-top: 20px; }
+        .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        .card-img { width: 100%; height: 200px; object-fit: cover; background: #ddd; }
+        .card-content { padding: 20px; }
         
-        /* The Modal (Pop-up) */
-        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: white; margin: 10% auto; padding: 30px; border-radius: 15px; width: 400px; }
+        /* Sections inside the card */
+        .section-title { font-weight: bold; color: #28a745; margin-top: 15px; border-bottom: 1px solid #eee; }
+        .steps-list { padding-left: 20px; }
         
-        input, textarea { width: 100%; margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;}
-        .btn-add { background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
-        .btn-delete { background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
-        .btn-edit { background: #ffc107; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+        /* Modal Styling */
+        .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); overflow-y: auto; }
+        .modal-content { background: white; margin: 5% auto; padding: 30px; border-radius: 15px; width: 500px; }
+        input, textarea { width: 100%; margin: 8px 0; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        
+        .btn-save { background: #28a745; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-size: 16px; }
+        .btn-delete { background: #ff4d4d; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>My Recipe Book</h1>
-        <button class="btn-add" onclick="openModal()">+ Add New Recipe</button>
+        <h1>My Organized Recipes</h1>
+        <button onclick="openModal()" style="padding: 10px 20px; cursor:pointer;">+ Add New Recipe</button>
     </div>
 
-    <div id="recipeList">
-        </div>
+    <div id="recipeList"></div>
 
     <div id="recipeModal" class="modal">
         <div class="modal-content">
             <h2 id="modalTitle">New Recipe</h2>
             <input type="hidden" id="editIndex">
-            <input type="text" id="recipeName" placeholder="Recipe Name">
-            <textarea id="recipeIngredients" placeholder="Ingredients (e.g. 2 eggs, 1 cup flour)"></textarea>
-            <button class="btn-add" onclick="saveRecipe()">Save Recipe</button>
-            <button onclick="closeModal()" style="background:none; border:none; color:grey; cursor:pointer; margin-top:10px;">Cancel</button>
+            
+            <label>Recipe Name</label>
+            <input type="text" id="recipeName" placeholder="e.g. Best Tacos Ever">
+            
+            <label>Image URL</label>
+            <input type="text" id="recipeImage" placeholder="Paste a link to a photo">
+            
+            <label>Ingredients</label>
+            <textarea id="recipeIngredients" placeholder="2 Eggs, 1 cup Flour, 1 tsp Salt"></textarea>
+            
+            <label>Instructions (One step per line)</label>
+            <textarea id="recipeSteps" rows="5" placeholder="1. Boil Water&#10;2. Add Pasta"></textarea>
+            
+            <button class="btn-save" onclick="saveRecipe()">Save to Book</button>
+            <button onclick="closeModal()" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:10px;">Cancel</button>
         </div>
     </div>
 
     <script>
-        let recipes = [];
+        let recipes = JSON.parse(localStorage.getItem('myRecipes')) || [];
+        displayRecipes();
 
         function openModal(index = -1) {
             document.getElementById('recipeModal').style.display = "block";
             if (index > -1) {
+                const r = recipes[index];
                 document.getElementById('modalTitle').innerText = "Edit Recipe";
-                document.getElementById('recipeName').value = recipes[index].name;
-                document.getElementById('recipeIngredients').value = recipes[index].ingredients;
+                document.getElementById('recipeName').value = r.name;
+                document.getElementById('recipeImage').value = r.image;
+                document.getElementById('recipeIngredients').value = r.ingredients;
+                document.getElementById('recipeSteps').value = r.steps;
                 document.getElementById('editIndex').value = index;
             } else {
                 document.getElementById('modalTitle').innerText = "New Recipe";
@@ -59,49 +76,59 @@
             }
         }
 
-        function closeModal() {
-            document.getElementById('recipeModal').style.display = "none";
-            clearInputs();
-        }
+        function closeModal() { document.getElementById('recipeModal').style.display = "none"; }
 
         function clearInputs() {
             document.getElementById('recipeName').value = "";
+            document.getElementById('recipeImage').value = "";
             document.getElementById('recipeIngredients').value = "";
+            document.getElementById('recipeSteps').value = "";
             document.getElementById('editIndex').value = -1;
         }
 
         function saveRecipe() {
-            const name = document.getElementById('recipeName').value;
-            const ingredients = document.getElementById('recipeIngredients').value;
+            const recipeData = {
+                name: document.getElementById('recipeName').value,
+                image: document.getElementById('recipeImage').value || 'https://via.placeholder.com/350x200?text=No+Image',
+                ingredients: document.getElementById('recipeIngredients').value,
+                steps: document.getElementById('recipeSteps').value
+            };
             const editIndex = document.getElementById('editIndex').value;
 
-            if (name && ingredients) {
-                if (editIndex > -1) {
-                    recipes[editIndex] = { name, ingredients };
-                } else {
-                    recipes.push({ name, ingredients });
-                }
-                closeModal();
-                displayRecipes();
-            }
+            if (editIndex > -1) { recipes[editIndex] = recipeData; } 
+            else { recipes.push(recipeData); }
+
+            localStorage.setItem('myRecipes', JSON.stringify(recipes));
+            closeModal();
+            displayRecipes();
         }
 
         function deleteRecipe(index) {
-            recipes.splice(index, 1);
-            displayRecipes();
+            if(confirm("Delete this recipe?")) {
+                recipes.splice(index, 1);
+                localStorage.setItem('myRecipes', JSON.stringify(recipes));
+                displayRecipes();
+            }
         }
 
         function displayRecipes() {
             const list = document.getElementById('recipeList');
             list.innerHTML = "";
             recipes.forEach((recipe, index) => {
+                // This part turns the text into an actual numbered list
+                const stepList = recipe.steps.split('\n').map(step => `<li>${step}</li>`).join('');
+
                 list.innerHTML += `
                     <div class="card">
-                        <h3>${recipe.name}</h3>
-                        <p>${recipe.ingredients}</p>
-                        <div class="card-btns">
-                            <button class="btn-edit" onclick="openModal(${index})">Edit</button>
+                        <img src="${recipe.image}" class="card-img" alt="Recipe Image">
+                        <div class="card-content">
+                            <h2 style="margin:0;">${recipe.name}</h2>
+                            <div class="section-title">Ingredients</div>
+                            <p style="white-space: pre-wrap;">${recipe.ingredients}</p>
+                            <div class="section-title">Steps</div>
+                            <ol class="steps-list">${stepList}</ol>
                             <button class="btn-delete" onclick="deleteRecipe(${index})">Delete</button>
+                            <button onclick="openModal(${index})" style="cursor:pointer;">Edit</button>
                         </div>
                     </div>
                 `;
