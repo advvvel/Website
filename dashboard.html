@@ -145,3 +145,156 @@
     </div>
 
     <script>
+        let recipes = JSON.parse(localStorage.getItem('myRecipes')) || [];
+        let folders = JSON.parse(localStorage.getItem('myFolders')) || [];
+        let dashColors = JSON.parse(localStorage.getItem('dashColors')) || ['#f4f7f6', '#ffecec', '#e3f2fd', '#222222'];
+        let cardColors = JSON.parse(localStorage.getItem('cardColors')) || ['#ffffff', '#fff9c4', '#c8e6c9', '#ffccbc'];
+        let currentFolder = 'All';
+        let selectedCardColor = '#ffffff';
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        // Theme Swatches
+        function renderDashSwatches() {
+            const container = document.getElementById('dashSwatches');
+            container.innerHTML = "";
+            dashColors.forEach(color => {
+                const div = document.createElement('div');
+                div.className = 'color-swatch';
+                div.style.background = color;
+                div.onclick = () => {
+                    document.documentElement.style.setProperty('--bg-color', color);
+                    localStorage.setItem('globalBg', color);
+                };
+                container.appendChild(div);
+            });
+        }
+
+        function addNewDashColor() {
+            const color = document.getElementById('dashColorPicker').value;
+            if(!dashColors.includes(color)) { dashColors.push(color); localStorage.setItem('dashColors', JSON.stringify(dashColors)); renderDashSwatches(); }
+        }
+
+        // Folders
+        function addFolder() {
+            const name = document.getElementById('newFolderName').value;
+            if (name && !folders.includes(name)) { folders.push(name); saveFolders(); document.getElementById('newFolderName').value = ""; }
+        }
+
+        function saveFolders() { localStorage.setItem('myFolders', JSON.stringify(folders)); renderFolderUI(); }
+
+        function renderFolderUI() {
+            const list = document.getElementById('folderList');
+            const select = document.getElementById('recipeFolderSelect');
+            list.innerHTML = `<div onclick="filterFolder('All')" style="cursor:pointer; padding:8px;">All Recipes</div>`;
+            select.innerHTML = `<option value="All">All Recipes</option>`;
+            folders.forEach((f, i) => {
+                list.innerHTML += `<div style="display:flex; justify-content:space-between; padding:8px;">
+                    <span onclick="filterFolder('${f}')" style="cursor:pointer;">${f}</span>
+                    <span onclick="deleteFolder(${i})" style="color:red; cursor:pointer;">×</span>
+                </div>`;
+                select.innerHTML += `<option value="${f}">${f}</option>`;
+            });
+        }
+
+        function deleteFolder(idx) { folders.splice(idx, 1); saveFolders(); }
+
+        function filterFolder(name) {
+            currentFolder = name;
+            document.getElementById('currentFolderTitle').innerText = name;
+            toggleSidebar();
+            displayRecipes();
+        }
+
+        // Recipe Card Swatches
+        function renderCardSwatches() {
+            const container = document.getElementById('cardSwatches');
+            container.innerHTML = "";
+            cardColors.forEach(color => {
+                const div = document.createElement('div');
+                div.className = 'color-swatch' + (selectedCardColor === color ? ' selected' : '');
+                div.style.background = color;
+                div.onclick = () => { selectedCardColor = color; renderCardSwatches(); };
+                container.appendChild(div);
+            });
+        }
+
+        function addNewCardColor() {
+            const color = document.getElementById('cardColorPicker').value;
+            if(!cardColors.includes(color)) { cardColors.push(color); localStorage.setItem('cardColors', JSON.stringify(cardColors)); renderCardSwatches(); }
+        }
+
+        // Modal Logic
+        function openModal(index = -1) {
+            document.getElementById('recipeModal').style.display = "block";
+            renderCardSwatches();
+            if (index > -1) {
+                const r = recipes[index];
+                document.getElementById('recipeName').value = r.name;
+                document.getElementById('recipeImage').value = r.image || "";
+                document.getElementById('recipeFolderSelect').value = r.folder;
+                document.getElementById('recipeIngredients').value = r.ingredients;
+                document.getElementById('recipeSteps').value = r.steps;
+                selectedCardColor = r.cardBg;
+                document.getElementById('editIndex').value = index;
+            } else {
+                document.getElementById('editIndex').value = -1;
+                document.getElementById('recipeName').value = "";
+                document.getElementById('recipeImage').value = "";
+                document.getElementById('recipeIngredients').value = "";
+                document.getElementById('recipeSteps').value = "";
+                selectedCardColor = '#ffffff';
+            }
+            renderCardSwatches();
+        }
+
+        function closeModal() { document.getElementById('recipeModal').style.display = "none"; }
+
+        function saveRecipe() {
+            const data = {
+                name: document.getElementById('recipeName').value,
+                image: document.getElementById('recipeImage').value || 'https://via.placeholder.com/350x180?text=No+Image',
+                folder: document.getElementById('recipeFolderSelect').value,
+                ingredients: document.getElementById('recipeIngredients').value,
+                steps: document.getElementById('recipeSteps').value,
+                cardBg: selectedCardColor
+            };
+            const idx = document.getElementById('editIndex').value;
+            if (idx > -1) recipes[idx] = data; else recipes.push(data);
+            localStorage.setItem('myRecipes', JSON.stringify(recipes));
+            closeModal();
+            displayRecipes();
+        }
+
+        function displayRecipes() {
+            const list = document.getElementById('recipeList');
+            list.innerHTML = "";
+            const filtered = currentFolder === 'All' ? recipes : recipes.filter(r => r.folder === currentFolder);
+            filtered.forEach((r, i) => {
+                const stepItems = r.steps.split('\n').filter(s => s.trim() !== "").map(s => `<li>${s}</li>`).join('');
+                list.innerHTML += `
+                    <div class="card" style="background:${r.cardBg}">
+                        <img src="${r.image}" class="card-img">
+                        <div class="card-body">
+                            <h2 style="margin:0;">${r.name}</h2>
+                            <div class="section-title">Ingredients</div>
+                            <p style="white-space: pre-wrap; font-size:14px;">${r.ingredients}</p>
+                            <div class="section-title">Instructions</div>
+                            <ol class="steps-list" style="font-size:14px;">${stepItems}</ol>
+                            <button onclick="openModal(${recipes.indexOf(r)})" style="margin-top:15px; cursor:pointer; border:none; background:rgba(0,0,0,0.05); padding:8px 12px; border-radius:5px;">Edit Recipe</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        // Initialize
+        if(localStorage.getItem('globalBg')) document.documentElement.style.setProperty('--bg-color', localStorage.getItem('globalBg'));
+        renderDashSwatches();
+        renderFolderUI();
+        displayRecipes();
+    </script>
+</body>
+</html>
