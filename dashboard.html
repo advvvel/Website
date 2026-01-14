@@ -1,66 +1,72 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Pro Recipe Manager</title>
+    <title>Custom Recipe Manager</title>
     <style>
         :root { --bg-color: #f4f7f6; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); margin: 0; min-height: 100vh; transition: background 0.3s; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); margin: 0; min-height: 100vh; overflow-x: hidden; }
         
-        /* Navigation Bar */
+        /* Navigation */
         .navbar { background: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .nav-right { display: flex; gap: 15px; align-items: center; }
 
-        /* The Pop-up Sidebar (Drawer) */
-        .sidebar { position: fixed; top: 0; right: -300px; width: 280px; height: 100%; background: #222; color: white; padding: 25px; transition: 0.3s; z-index: 1000; box-shadow: -5px 0 15px rgba(0,0,0,0.3); }
-        .sidebar.active { right: 0; }
+        /* Completely Hidden Sidebar */
+        .sidebar { position: fixed; top: 0; right: -320px; width: 300px; height: 100%; background: #222; color: white; padding: 25px; transition: all 0.4s ease; z-index: 1000; visibility: hidden; }
+        .sidebar.active { right: 0; visibility: visible; }
         .sidebar-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index: 999; }
         .sidebar-overlay.active { display: block; }
         
-        /* Rounded Square Color Buttons */
-        .color-swatch { width: 35px; height: 35px; border-radius: 8px; border: 2px solid white; cursor: pointer; display: inline-block; margin-right: 5px; vertical-align: middle; }
-        
-        /* Recipe Cards */
-        .main-content { padding: 30px; }
-        #recipeList { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; }
-        .card { border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; padding: 20px; }
-        
-        /* Buttons */
-        .btn-blue { background: #007bff; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .icon-btn { font-size: 24px; background: none; border: none; cursor: pointer; padding: 5px; }
+        /* Folder Styles */
+        .folder-container { display: flex; justify-content: space-between; align-items: center; background: #333; margin-bottom: 5px; border-radius: 5px; padding-right: 10px; }
+        .folder-item { flex-grow: 1; padding: 10px; cursor: pointer; color: #ccc; }
+        .folder-item:hover { color: white; }
+        .del-folder { color: #ff4d4d; cursor: pointer; font-weight: bold; border: none; background: none; }
 
-        /* Folders */
-        .folder-item { padding: 10px; cursor: pointer; border-radius: 5px; margin-bottom: 5px; }
-        .folder-item:hover { background: #444; }
+        /* Color Swatch System */
+        .swatch-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .color-swatch { width: 30px; height: 30px; border-radius: 6px; border: 2px solid #444; cursor: pointer; transition: transform 0.2s; }
+        .color-swatch:hover { transform: scale(1.1); border-color: white; }
+        .add-color-btn { width: 30px; height: 30px; border-radius: 6px; border: 2px dashed #666; background: none; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+
+        /* Layout */
+        .main-content { padding: 30px; }
+        #recipeList { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .btn-blue { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
 
     <div class="sidebar" id="sidebar">
-        <h2>Settings</h2>
-        <hr>
-        <h3>Folders</h3>
+        <h2>Settings ⚙️</h2>
+        <hr border="0" height="1px" background="#444">
+        
+        <h3>My Folders</h3>
         <div id="folderList"></div>
-        <input type="text" id="newFolderName" placeholder="New Folder Name..." style="width:100%; margin: 10px 0; padding: 8px;">
-        <button class="btn-blue" onclick="addFolder()" style="width:100%">+ Add Folder</button>
+        <div style="display:flex; gap:5px; margin-top:10px;">
+            <input type="text" id="newFolderName" placeholder="New folder..." style="flex-grow:1; padding:5px;">
+            <button onclick="addFolder()" style="cursor:pointer;">+</button>
+        </div>
+
+        <hr style="margin:25px 0; opacity:0.2;">
         
-        <hr style="margin: 20px 0;">
-        <h3>Dashboard Theme</h3>
-        <div class="color-swatch" style="background:#f4f7f6;" onclick="changeGlobalBg('#f4f7f6')"></div>
-        <div class="color-swatch" style="background:#ffecec;" onclick="changeGlobalBg('#ffecec')"></div>
-        <div class="color-swatch" style="background:#e3f2fd;" onclick="changeGlobalBg('#e3f2fd')"></div>
-        <div class="color-swatch" style="background:#222;" onclick="changeGlobalBg('#222')"></div>
-        <p><small>Click a square to change background</small></p>
-        
-        <button onclick="toggleSidebar()" style="margin-top: 50px; color: white; background: none; border: 1px solid white; width: 100%; padding: 10px; cursor:pointer;">Close Settings</button>
+        <h3>Theme Colors</h3>
+        <div class="swatch-container" id="swatchList">
+            </div>
+        <div style="margin-top:10px; display:flex; align-items:center; gap:10px;">
+            <input type="color" id="colorPicker" style="width:40px; height:40px; border:none; background:none; cursor:pointer;">
+            <span>Add Custom Color</span>
+        </div>
+
+        <button onclick="toggleSidebar()" style="margin-top:40px; width:100%; padding:10px; background:#444; color:white; border:none; border-radius:5px; cursor:pointer;">Close</button>
     </div>
 
     <div class="navbar">
-        <h1>My Recipes</h1>
-        <div class="nav-right">
+        <h1>RecipeBook</h1>
+        <div style="display:flex; gap:15px; align-items:center;">
             <button class="btn-blue" onclick="openModal()">+ Create Recipe</button>
-            <button class="icon-btn" onclick="toggleSidebar()">⚙️</button>
+            <button onclick="toggleSidebar()" style="background:none; border:none; font-size:24px; cursor:pointer;">⚙️</button>
         </div>
     </div>
 
@@ -70,34 +76,82 @@
     </div>
 
     <div id="recipeModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000;">
-        <div style="background:white; width:450px; margin:50px auto; padding:30px; border-radius:15px;">
-            <h2>Recipe Details</h2>
+        <div style="background:white; width:400px; margin:50px auto; padding:30px; border-radius:15px;">
+            <h2 id="modalTitle">Recipe Info</h2>
             <input type="hidden" id="editIndex">
-            <input type="text" id="recipeName" placeholder="Recipe Name">
-            <select id="recipeFolderSelect"></select>
-            <textarea id="recipeIngredients" placeholder="Ingredients..." rows="3" style="width:100%"></textarea>
-            <textarea id="recipeSteps" placeholder="Steps (one per line)..." rows="4" style="width:100%"></textarea>
+            <input type="text" id="recipeName" placeholder="Recipe Name" style="width:100%; margin-bottom:10px; padding:8px;">
+            <select id="recipeFolderSelect" style="width:100%; margin-bottom:10px; padding:8px;"></select>
+            <textarea id="recipeIngredients" placeholder="Ingredients..." style="width:100%; margin-bottom:10px;"></textarea>
+            <textarea id="recipeSteps" placeholder="Steps..." style="width:100%; margin-bottom:10px;"></textarea>
             
-            <div style="margin: 15px 0;">
-                <label>Card Color Theme:</label><br>
-                <input type="color" id="cardBg" value="#ffffff">
-                <input type="color" id="cardHead" value="#007bff">
-                <input type="color" id="cardText" value="#333333">
-            </div>
-
-            <button class="btn-blue" onclick="saveRecipe()" style="width:100%">Save Recipe</button>
+            <label>Card Theme (BG, Header, Text):</label><br>
+            <input type="color" id="cardBg" value="#ffffff">
+            <input type="color" id="cardHead" value="#007bff">
+            <input type="color" id="cardText" value="#333333">
+            
+            <button class="btn-blue" onclick="saveRecipe()" style="width:100%; margin-top:15px;">Save Recipe</button>
             <button onclick="closeModal()" style="width:100%; background:none; border:none; margin-top:10px; cursor:pointer;">Cancel</button>
         </div>
     </div>
 
     <script>
         let recipes = JSON.parse(localStorage.getItem('myRecipes')) || [];
-        let folders = JSON.parse(localStorage.getItem('myFolders')) || ['All', 'Desserts', 'Dinners'];
+        let folders = JSON.parse(localStorage.getItem('myFolders')) || []; // Starts empty
+        let customColors = JSON.parse(localStorage.getItem('myColors')) || ['#f4f7f6', '#ffecec', '#e3f2fd', '#222222'];
         let currentFolder = 'All';
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
-            document.querySelector('.sidebar-overlay').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        function addFolder() {
+            const name = document.getElementById('newFolderName').value;
+            if (name && !folders.includes(name)) {
+                folders.push(name);
+                saveAndRenderFolders();
+                document.getElementById('newFolderName').value = "";
+            }
+        }
+
+        function deleteFolder(index) {
+            if(confirm("Delete this folder? (Recipes will stay in 'All')")) {
+                folders.splice(index, 1);
+                saveAndRenderFolders();
+            }
+        }
+
+        function saveAndRenderFolders() {
+            localStorage.setItem('myFolders', JSON.stringify(folders));
+            const list = document.getElementById('folderList');
+            const select = document.getElementById('recipeFolderSelect');
+            list.innerHTML = `<div class="folder-container"><div class="folder-item" onclick="filterFolder('All')">All Recipes</div></div>`;
+            select.innerHTML = `<option value="All">All Recipes</option>`;
+            
+            folders.forEach((f, i) => {
+                list.innerHTML += `
+                    <div class="folder-container">
+                        <div class="folder-item" onclick="filterFolder('${f}')">${f}</div>
+                        <button class="del-folder" onclick="deleteFolder(${i})">×</button>
+                    </div>`;
+                select.innerHTML += `<option value="${f}">${f}</option>`;
+            });
+        }
+
+        // Color Palette Logic
+        document.getElementById('colorPicker').onchange = function() {
+            customColors.push(this.value);
+            localStorage.setItem('myColors', JSON.stringify(customColors));
+            renderSwatches();
+            changeGlobalBg(this.value);
+        };
+
+        function renderSwatches() {
+            const list = document.getElementById('swatchList');
+            list.innerHTML = "";
+            customColors.forEach(color => {
+                list.innerHTML += `<div class="color-swatch" style="background:${color}" onclick="changeGlobalBg('${color}')"></div>`;
+            });
         }
 
         function changeGlobalBg(color) {
@@ -105,40 +159,20 @@
             localStorage.setItem('globalBg', color);
         }
 
-        function addFolder() {
-            const name = document.getElementById('newFolderName').value;
-            if (name && !folders.includes(name)) {
-                folders.push(name);
-                localStorage.setItem('myFolders', JSON.stringify(folders));
-                renderFolders();
-                document.getElementById('newFolderName').value = "";
-            }
-        }
-
-        function renderFolders() {
-            const list = document.getElementById('folderList');
-            const select = document.getElementById('recipeFolderSelect');
-            list.innerHTML = "";
-            select.innerHTML = "";
-            folders.forEach(f => {
-                list.innerHTML += `<div class="folder-item" onclick="filterFolder('${f}')">${f}</div>`;
-                select.innerHTML += `<option value="${f}">${f}</option>`;
-            });
-        }
-
         function filterFolder(name) {
             currentFolder = name;
             document.getElementById('currentFolderTitle').innerText = name;
-            toggleSidebar(); // Close sidebar after selecting
+            toggleSidebar();
             displayRecipes();
         }
 
         function openModal(index = -1) {
             document.getElementById('recipeModal').style.display = "block";
+            saveAndRenderFolders();
             if (index > -1) {
                 const r = recipes[index];
                 document.getElementById('recipeName').value = r.name;
-                document.getElementById('recipeFolderSelect').value = r.folder;
+                document.getElementById('recipeFolderSelect').value = r.folder || 'All';
                 document.getElementById('recipeIngredients').value = r.ingredients;
                 document.getElementById('recipeSteps').value = r.steps;
                 document.getElementById('cardBg').value = r.cardBg || '#ffffff';
@@ -147,6 +181,9 @@
                 document.getElementById('editIndex').value = index;
             } else {
                 document.getElementById('editIndex').value = -1;
+                document.getElementById('recipeName').value = "";
+                document.getElementById('recipeIngredients').value = "";
+                document.getElementById('recipeSteps').value = "";
             }
         }
 
@@ -177,16 +214,17 @@
                 const actualIndex = recipes.indexOf(r);
                 list.innerHTML += `
                     <div class="card" style="background-color: ${r.cardBg}; color: ${r.cardText};">
-                        <h2 style="color: ${r.cardHead};">${r.name}</h2>
+                        <h2 style="color: ${r.cardHead}; margin-top:0;">${r.name}</h2>
                         <p><strong>Ingredients:</strong> ${r.ingredients}</p>
-                        <button onclick="openModal(${actualIndex})" style="padding:5px; width:60px; cursor:pointer;">Edit</button>
+                        <button onclick="openModal(${actualIndex})" style="cursor:pointer; border:none; background:#eee; padding:5px 10px; border-radius:4px;">Edit</button>
                     </div>`;
             });
         }
 
-        // Initialize
+        // Init
         if(localStorage.getItem('globalBg')) changeGlobalBg(localStorage.getItem('globalBg'));
-        renderFolders();
+        saveAndRenderFolders();
+        renderSwatches();
         displayRecipes();
     </script>
 </body>
