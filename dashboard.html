@@ -1,18 +1,112 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Recipes</title>
+    <title>My Recipe Dashboard</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; }
-        .recipe-card { background: white; padding: 15px; margin-bottom: 10px; border-left: 5px solid #28a745; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        
+        /* Recipe Cards */
+        #recipeList { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; }
+        .card h3 { margin-top: 0; color: #28a745; }
+        .card-btns { margin-top: 15px; display: flex; gap: 10px; }
+        
+        /* The Modal (Pop-up) */
+        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: white; margin: 10% auto; padding: 30px; border-radius: 15px; width: 400px; }
+        
+        input, textarea { width: 100%; margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;}
+        .btn-add { background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-delete { background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+        .btn-edit { background: #ffc107; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <h1>My Recipe Book</h1>
-    <div class="recipe-card">
-        <h3>Grandma's Cookies</h3>
-        <p>Ingredients: Flour, Sugar, Love...</p>
+
+    <div class="header">
+        <h1>My Recipe Book</h1>
+        <button class="btn-add" onclick="openModal()">+ Add New Recipe</button>
     </div>
-    <button onclick="window.location.href='index.html'">Logout</button>
+
+    <div id="recipeList">
+        </div>
+
+    <div id="recipeModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">New Recipe</h2>
+            <input type="hidden" id="editIndex">
+            <input type="text" id="recipeName" placeholder="Recipe Name">
+            <textarea id="recipeIngredients" placeholder="Ingredients (e.g. 2 eggs, 1 cup flour)"></textarea>
+            <button class="btn-add" onclick="saveRecipe()">Save Recipe</button>
+            <button onclick="closeModal()" style="background:none; border:none; color:grey; cursor:pointer; margin-top:10px;">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        let recipes = [];
+
+        function openModal(index = -1) {
+            document.getElementById('recipeModal').style.display = "block";
+            if (index > -1) {
+                document.getElementById('modalTitle').innerText = "Edit Recipe";
+                document.getElementById('recipeName').value = recipes[index].name;
+                document.getElementById('recipeIngredients').value = recipes[index].ingredients;
+                document.getElementById('editIndex').value = index;
+            } else {
+                document.getElementById('modalTitle').innerText = "New Recipe";
+                clearInputs();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('recipeModal').style.display = "none";
+            clearInputs();
+        }
+
+        function clearInputs() {
+            document.getElementById('recipeName').value = "";
+            document.getElementById('recipeIngredients').value = "";
+            document.getElementById('editIndex').value = -1;
+        }
+
+        function saveRecipe() {
+            const name = document.getElementById('recipeName').value;
+            const ingredients = document.getElementById('recipeIngredients').value;
+            const editIndex = document.getElementById('editIndex').value;
+
+            if (name && ingredients) {
+                if (editIndex > -1) {
+                    recipes[editIndex] = { name, ingredients };
+                } else {
+                    recipes.push({ name, ingredients });
+                }
+                closeModal();
+                displayRecipes();
+            }
+        }
+
+        function deleteRecipe(index) {
+            recipes.splice(index, 1);
+            displayRecipes();
+        }
+
+        function displayRecipes() {
+            const list = document.getElementById('recipeList');
+            list.innerHTML = "";
+            recipes.forEach((recipe, index) => {
+                list.innerHTML += `
+                    <div class="card">
+                        <h3>${recipe.name}</h3>
+                        <p>${recipe.ingredients}</p>
+                        <div class="card-btns">
+                            <button class="btn-edit" onclick="openModal(${index})">Edit</button>
+                            <button class="btn-delete" onclick="deleteRecipe(${index})">Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    </script>
 </body>
 </html>
