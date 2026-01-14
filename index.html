@@ -3,19 +3,57 @@
 <head>
     <title>Recipe Book Login</title>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; padding-top: 50px; background-color: #f4f4f4; }
-        .login-card { background: white; padding: 20px; border-radius: 8px; shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        input { display: block; margin: 10px 0; padding: 10px; width: 200px; }
-        button { background: #28a745; color: white; border: none; padding: 10px; width: 100%; cursor: pointer; }
+        /* Centers the login card on the screen */
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0;
+            background-color: #f4f4f4; 
+        }
+        .login-card { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            text-align: center;
+        }
+        h2 { margin-top: 0; color: #333; }
+        input { 
+            display: block; 
+            margin: 15px auto; 
+            padding: 12px; 
+            width: 250px; 
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button { 
+            background: #28a745; 
+            color: white; 
+            border: none; 
+            padding: 12px; 
+            width: 100%; 
+            border-radius: 8px;
+            cursor: pointer; 
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #218838;
+        }
     </style>
 </head>
 <body>
+
     <div class="login-card">
         <h2>Recipe Login</h2>
         <input type="text" placeholder="Username">
         <input type="password" placeholder="Password">
-        <button onclick="alert('In the future, this will log you in!')">Login</button>
+        <button onclick="window.location.href = 'temp-dashboard.html'">Login</button>
     </div>
-    <button onclick="window.location.href = 'temp-dashboard.html'">Login</button>
+
 </body>
 </html>
