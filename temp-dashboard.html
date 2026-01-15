@@ -55,7 +55,8 @@
             width: 30px; height: 30px; border-radius: 6px; cursor: pointer; 
             border: 2px solid transparent; transition: 0.2s; 
         }
-        .color-swatch.selected { border-color: #007bff; transform: scale(1.1); }
+        .color-swatch:hover { transform: scale(1.1); }
+        .color-swatch.selected { border: 2px solid #007bff; transform: scale(1.1); }
         
         .btn-blue { 
             background: #007bff; color: white; border: none; padding: 10px 20px; 
@@ -82,11 +83,9 @@
 
         .main-content { padding: 30px; }
         #recipeList { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
-        .card { border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); background: white; padding: 15px; }
+        .card { border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 20px; }
         
-        /* Delete folder button style */
         .delete-folder-btn { color: #ff5c5c; cursor: pointer; font-weight: bold; padding: 0 5px; }
-        .delete-folder-btn:hover { color: #ff0000; }
     </style>
 </head>
 <body>
@@ -141,8 +140,10 @@
             <label>Folder</label><select id="recipeFolderSelect"></select>
             <label>Ingredients</label><textarea id="recipeIngredients" rows="2"></textarea>
             <label>Instructions</label><textarea id="recipeSteps" rows="3"></textarea>
+            
             <label>Card Color</label>
             <div class="swatch-container" id="cardSwatches"></div>
+            
             <button class="btn-blue" onclick="window.saveRecipeToCloud()" style="width:100%; margin-top:20px;">Save Recipe</button>
             <button onclick="window.closeModal()" style="width:100%; background:none; border:none; margin-top:10px; cursor:pointer;">Cancel</button>
         </div>
@@ -169,14 +170,12 @@
         let currentUser = null;
         let cloudRecipes = [];
 
-        // LOAD LOCAL STATE
         window.folders = JSON.parse(localStorage.getItem('myFolders')) || [];
         window.dashColors = JSON.parse(localStorage.getItem('dashColors')) || ['#f4f7f6', '#ffecec', '#e3f2fd', '#222222'];
-        window.cardColors = ['#ffffff', '#fff9c4', '#c8e6c9', '#ffccbc'];
+        window.cardColors = ['#ffffff', '#fff9c4', '#c8e6c9', '#ffccbc', '#e1f5fe', '#f3e5f5'];
         window.currentFolder = 'All';
         window.selectedCardColor = '#ffffff';
 
-        // AUTH & LOGOUT
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
@@ -192,7 +191,6 @@
             window.location.href = 'index.html';
         };
 
-        // SIDEBAR & THEME FUNCTIONS
         window.toggleSidebar = () => {
             document.getElementById('sidebar').classList.toggle('active');
             document.getElementById('overlay').classList.toggle('active');
@@ -219,19 +217,13 @@
             }
         };
 
-        // FOLDER FUNCTIONS
         window.renderFolderUI = () => {
             const list = document.getElementById('folderList');
             const select = document.getElementById('recipeFolderSelect');
             list.innerHTML = `<div onclick="window.filterFolder('All')" style="cursor:pointer; padding:8px;">All Recipes</div>`;
             select.innerHTML = `<option value="All">All Recipes</option>`;
-            
             window.folders.forEach((f, index) => {
-                list.innerHTML += `
-                <div style="padding:8px; display:flex; justify-content:space-between; align-items:center;">
-                    <span onclick="window.filterFolder('${f}')" style="cursor:pointer;">${f}</span>
-                    <span class="delete-folder-btn" onclick="window.deleteFolder(${index})">×</span>
-                </div>`;
+                list.innerHTML += `<div style="padding:8px; display:flex; justify-content:space-between;"><span onclick="window.filterFolder('${f}')" style="cursor:pointer;">${f}</span><span class="delete-folder-btn" onclick="window.deleteFolder(${index})">×</span></div>`;
                 select.innerHTML += `<option value="${f}">${f}</option>`;
             });
         };
@@ -246,9 +238,8 @@
             }
         };
 
-        // DELETE FOLDER FUNCTION
         window.deleteFolder = (index) => {
-            if(confirm(`Delete the folder "${window.folders[index]}"? (Recipes in this folder will still exist in "All")`)) {
+            if(confirm("Delete this folder?")) {
                 window.folders.splice(index, 1);
                 localStorage.setItem('myFolders', JSON.stringify(window.folders));
                 window.renderFolderUI();
@@ -262,7 +253,22 @@
             window.displayRecipes();
         };
 
-        // RECIPE CLOUD LOGIC
+        // RENDER CARD SWATCHES (FIXED)
+        window.renderCardSwatches = () => {
+            const container = document.getElementById('cardSwatches');
+            container.innerHTML = "";
+            window.cardColors.forEach(color => {
+                const div = document.createElement('div');
+                div.className = 'color-swatch' + (window.selectedCardColor === color ? ' selected' : '');
+                div.style.background = color;
+                div.onclick = () => {
+                    window.selectedCardColor = color;
+                    window.renderCardSwatches();
+                };
+                container.appendChild(div);
+            });
+        };
+
         function syncCloudRecipes(uid) {
             const q = query(collection(db, "recipes"), where("uid", "==", uid));
             onSnapshot(q, (snapshot) => {
@@ -290,27 +296,21 @@
             const list = document.getElementById('recipeList');
             const searchVal = document.getElementById('searchInput').value.toLowerCase();
             list.innerHTML = "";
-            
             let filtered = window.currentFolder === 'All' ? cloudRecipes : cloudRecipes.filter(r => r.folder === window.currentFolder);
-            
-            // Apply search filtering
-            if(searchVal) {
-                filtered = filtered.filter(r => r.name.toLowerCase().includes(searchVal));
-            }
-
+            if(searchVal) filtered = filtered.filter(r => r.name.toLowerCase().includes(searchVal));
             filtered.forEach(r => {
                 list.innerHTML += `<div class="card" style="background:${r.cardBg}"><h3>${r.name}</h3><p>${r.ingredients}</p></div>`;
             });
-            
-            if(filtered.length === 0) {
-                list.innerHTML = "<p>No recipes found.</p>";
-            }
         };
 
-        window.openModal = () => document.getElementById('recipeModal').style.display = "block";
+        window.openModal = () => {
+            document.getElementById('recipeModal').style.display = "block";
+            window.selectedCardColor = '#ffffff'; // Default
+            window.renderCardSwatches();
+        };
+        
         window.closeModal = () => document.getElementById('recipeModal').style.display = "none";
 
-        // INITIALIZE
         window.renderDashSwatches();
         window.renderFolderUI();
     </script>
