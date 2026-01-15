@@ -36,7 +36,7 @@
             border-radius: 20px; font-size: 14px; outline: none; 
         }
 
-        /* Sidebar - Fixed Visibility */
+        /* Sidebar */
         .sidebar { 
             position: fixed; top: 0; right: -320px; width: 300px; height: 100%; 
             background: #222; color: white; padding: 25px; transition: 0.4s ease; 
@@ -83,6 +83,10 @@
         .main-content { padding: 30px; }
         #recipeList { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
         .card { border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); background: white; padding: 15px; }
+        
+        /* Delete folder button style */
+        .delete-folder-btn { color: #ff5c5c; cursor: pointer; font-weight: bold; padding: 0 5px; }
+        .delete-folder-btn:hover { color: #ff0000; }
     </style>
 </head>
 <body>
@@ -116,7 +120,7 @@
     <div class="navbar">
         <h1>RecipeBook</h1>
         <div class="search-container">
-            <input type="text" id="searchInput" class="search-input" placeholder="Search recipes...">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search and press Enter..." onkeydown="if(event.key === 'Enter') window.displayRecipes()">
         </div>
         <div style="display:flex; gap:15px; align-items:center;">
             <button class="btn-blue" onclick="window.openModal()">+ Create Recipe</button>
@@ -221,8 +225,13 @@
             const select = document.getElementById('recipeFolderSelect');
             list.innerHTML = `<div onclick="window.filterFolder('All')" style="cursor:pointer; padding:8px;">All Recipes</div>`;
             select.innerHTML = `<option value="All">All Recipes</option>`;
-            window.folders.forEach(f => {
-                list.innerHTML += `<div style="padding:8px;"><span onclick="window.filterFolder('${f}')" style="cursor:pointer;">${f}</span></div>`;
+            
+            window.folders.forEach((f, index) => {
+                list.innerHTML += `
+                <div style="padding:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <span onclick="window.filterFolder('${f}')" style="cursor:pointer;">${f}</span>
+                    <span class="delete-folder-btn" onclick="window.deleteFolder(${index})">×</span>
+                </div>`;
                 select.innerHTML += `<option value="${f}">${f}</option>`;
             });
         };
@@ -233,6 +242,15 @@
                 window.folders.push(name);
                 localStorage.setItem('myFolders', JSON.stringify(window.folders));
                 document.getElementById('newFolderName').value = "";
+                window.renderFolderUI();
+            }
+        };
+
+        // DELETE FOLDER FUNCTION
+        window.deleteFolder = (index) => {
+            if(confirm(`Delete the folder "${window.folders[index]}"? (Recipes in this folder will still exist in "All")`)) {
+                window.folders.splice(index, 1);
+                localStorage.setItem('myFolders', JSON.stringify(window.folders));
                 window.renderFolderUI();
             }
         };
@@ -270,11 +288,23 @@
 
         window.displayRecipes = () => {
             const list = document.getElementById('recipeList');
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
             list.innerHTML = "";
-            const filtered = window.currentFolder === 'All' ? cloudRecipes : cloudRecipes.filter(r => r.folder === window.currentFolder);
+            
+            let filtered = window.currentFolder === 'All' ? cloudRecipes : cloudRecipes.filter(r => r.folder === window.currentFolder);
+            
+            // Apply search filtering
+            if(searchVal) {
+                filtered = filtered.filter(r => r.name.toLowerCase().includes(searchVal));
+            }
+
             filtered.forEach(r => {
                 list.innerHTML += `<div class="card" style="background:${r.cardBg}"><h3>${r.name}</h3><p>${r.ingredients}</p></div>`;
             });
+            
+            if(filtered.length === 0) {
+                list.innerHTML = "<p>No recipes found.</p>";
+            }
         };
 
         window.openModal = () => document.getElementById('recipeModal').style.display = "block";
