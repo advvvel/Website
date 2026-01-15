@@ -1,196 +1,124 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>RecipeBook Dashboard</title>
+    <title>Recipe Dashboard</title>
     <style>
-        :root { 
-            --bg-color: #f4f7f6; 
-            --main-font: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        }
-        
-        body { 
-            font-family: var(--main-font); 
-            background-color: var(--bg-color); 
-            margin: 0; 
-            min-height: 100vh; 
-            transition: background 0.4s ease;
-        }
-
-        /* Navbar */
-        .navbar { 
-            background: white; 
-            padding: 15px 30px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
-            position: sticky;
-            top: 0;
-            z-index: 900;
-        }
-        .navbar h1 { margin: 0; font-size: 24px; color: #333; }
-
-        /* Search Bar Styling */
-        .search-container {
-            flex-grow: 1;
-            margin: 0 40px;
-            max-width: 500px;
-        }
-        .search-input {
-            width: 100%;
-            padding: 10px 15px;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-        .search-input:focus { border-color: #007bff; }
-
-        /* Sidebar */
-        .sidebar { 
-            position: fixed; top: 0; right: -320px; width: 300px; height: 100%; 
-            background: #222; color: white; padding: 25px; transition: 0.4s ease; 
-            z-index: 1000; visibility: hidden; box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-        }
-        .sidebar.active { right: 0; visibility: visible; }
-        .sidebar-overlay { 
-            display: none; position: fixed; top:0; left:0; width:100%; height:100%; 
-            background:rgba(0,0,0,0.5); z-index: 999; 
-        }
-        .sidebar-overlay.active { display: block; }
-
-        .swatch-container { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
-        .color-swatch { 
-            width: 30px; height: 30px; border-radius: 6px; cursor: pointer; 
-            border: 2px solid transparent; transition: 0.2s; 
-        }
-        .color-swatch:hover, .color-swatch.selected { border-color: #007bff; transform: scale(1.1); }
-        
-        .btn-blue { 
-            background: #007bff; color: white; border: none; padding: 10px 20px; 
-            border-radius: 8px; cursor: pointer; font-family: var(--main-font); font-weight: bold;
-        }
-        .btn-save-swatch {
-            background: #444; color: white; border: none; padding: 5px 12px; 
-            border-radius: 15px; cursor: pointer; font-size: 12px; margin-left: 10px;
-        }
-
-        .btn-logout {
-            margin-top: auto; /* Pushes button to bottom */
-            width: 100%;
-            padding: 12px;
-            background: #d32f2f;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-        .btn-logout:hover { background: #b71c1c; }
-
-        /* Modal */
-        .modal { 
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.8); z-index: 2000; overflow-y: auto;
-        }
-        .modal-content { 
-            background: white; width: 420px; margin: 20px auto; padding: 30px; 
-            border-radius: 15px; font-family: var(--main-font); 
-        }
-        .modal-content label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; }
-        input, textarea, select { 
-            width: 100%; margin-top: 5px; padding: 10px; border: 1px solid #ddd; 
-            border-radius: 8px; box-sizing: border-box; font-family: var(--main-font);
-        }
-
-        /* Recipe Cards */
-        .main-content { padding: 30px; }
-        #recipeList { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
-        .card { border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
-        .card-img { width: 100%; height: 180px; object-fit: cover; background: #eee; }
-        .card-body { padding: 20px; }
-        .section-title { font-weight: bold; margin-top: 15px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 3px; }
-        .steps-list { padding-left: 20px; margin-top: 8px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { color: #333; }
+        input, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn { background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-logout { background: #dc3545; margin-top: 20px; }
+        #recipeList { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+        .recipe-item { background: #f9f9f9; padding: 10px; margin-bottom: 10px; border-radius: 5px; border-left: 5px solid #28a745; }
     </style>
 </head>
 <body>
 
-    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
-    
-    <div class="sidebar" id="sidebar">
-        <h2>Settings ⚙️</h2>
-        <h3>Dashboard Theme</h3>
-        <div class="swatch-container" id="dashSwatches"></div>
-        <div style="display:flex; align-items:center; margin-top:10px;">
-            <input type="color" id="dashColorPicker" style="width:30px; height:30px; border:none; cursor:pointer; background:none;">
-            <button class="btn-save-swatch" onclick="addNewDashColor()">Save Color</button>
-        </div>
+<div class="container">
+    <h2>My Recipe Book</h2>
+    <p id="userEmail">Loading user...</p>
 
-        <hr style="margin:25px 0; border:0; border-top:1px solid #444;">
-        <h3>Folders</h3>
-        <div id="folderList"></div>
-        <div style="display:flex; gap:5px; margin-top:10px;">
-            <input type="text" id="newFolderName" placeholder="Folder name..." style="background:#333; color:white; border:none; padding:8px; border-radius:5px;">
-            <button onclick="addFolder()" style="cursor:pointer; background:#555; border:none; color:white; padding:0 12px; border-radius:5px;">+</button>
-        </div>
+    <input type="text" id="recipeTitle" placeholder="Recipe Name (e.g. Pasta)">
+    <textarea id="recipeIngredients" rows="4" placeholder="Ingredients and steps..."></textarea>
+    <button class="btn" onclick="saveRecipe()">Add Recipe to Cloud</button>
+
+    <div id="recipeList">
+        <h3>My Saved Recipes</h3>
+        <div id="listContent">Loading your recipes...</div>
+    </div>
+
+    <button class="btn btn-logout" onclick="handleLogout()">Logout</button>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+    // Your Firebase Config
+    const firebaseConfig = {
+        apiKey: "AIzaSyA-re9plYFbo2hnpkt1oTwJo4ZHes6WZaU",
+        authDomain: "recipebook-fb16b.firebaseapp.com",
+        projectId: "recipebook-fb16b",
+        storageBucket: "recipebook-fb16b.firebasestorage.app",
+        messagingSenderId: "213197710946",
+        appId: "1:213197710946:web:f3a05df4fae61ac023933b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+
+    // 1. Monitor Auth State
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            currentUser = user;
+            document.getElementById('userEmail').innerText = "Logged in as: " + user.email;
+            loadRecipes(user.uid); // Load recipes once we have the ID
+        } else {
+            window.location.href = 'index.html'; // Kick out if not logged in
+        }
+    });
+
+    // 2. Save Recipe to Firestore
+    window.saveRecipe = async () => {
+        const title = document.getElementById('recipeTitle').value;
+        const ingredients = document.getElementById('recipeIngredients').value;
+
+        if (!title || !ingredients) {
+            alert("Please fill in both fields!");
+            return;
+        }
+
+        try {
+            await addDoc(collection(db, "recipes"), {
+                uid: currentUser.uid,
+                title: title,
+                ingredients: ingredients,
+                timestamp: new Date()
+            });
+            document.getElementById('recipeTitle').value = "";
+            document.getElementById('recipeIngredients').value = "";
+            alert("Recipe saved!");
+        } catch (e) {
+            console.error("Error adding document: ", e);
+            alert("Error: Make sure your Firestore Rules are set to 'allow read, write: if request.auth != null;'");
+        }
+    };
+
+    // 3. Load Recipes in Real-Time
+    function loadRecipes(uid) {
+        const q = query(collection(db, "recipes"), where("uid", "==", uid));
         
-        <button class="btn-logout" onclick="handleLogout()">Sign Out</button>
-        <button onclick="toggleSidebar()" style="margin-top:10px; width:100%; padding:10px; background:#555; color:white; border:none; border-radius:8px; cursor:pointer;">Close</button>
-    </div>
-
-    <div class="navbar">
-        <h1>RecipeBook</h1>
-        <div class="search-container">
-            <input type="text" id="searchInput" class="search-input" placeholder="Search recipes by name..." onkeyup="displayRecipes()">
-        </div>
-        <div style="display:flex; gap:15px; align-items:center;">
-            <button class="btn-blue" onclick="openModal()">+ Create Recipe</button>
-            <button onclick="toggleSidebar()" style="background:none; border:none; font-size:24px; cursor:pointer;">⚙️</button>
-        </div>
-    </div>
-
-    <div class="main-content">
-        <h2 id="currentFolderTitle">All Recipes</h2>
-        <div id="recipeList"></div>
-    </div>
-
-    <div id="recipeModal" class="modal">
-        <div class="modal-content">
-            <h2>Recipe Info</h2>
-            <input type="hidden" id="editIndex">
+        onSnapshot(q, (snapshot) => {
+            const listDiv = document.getElementById('listContent');
+            listDiv.innerHTML = ""; // Clear current list
             
-            <label>Recipe Name</label>
-            <input type="text" id="recipeName" placeholder="What are we cooking?">
-            
-            <label>Recipe Photo (Upload)</label>
-            <input type="file" id="recipeImageFile" accept="image/*">
+            if (snapshot.empty) {
+                listDiv.innerHTML = "No recipes saved yet.";
+                return;
+            }
 
-            <label>Folder</label>
-            <select id="recipeFolderSelect"></select>
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const item = document.createElement('div');
+                item.className = "recipe-item";
+                item.innerHTML = `<strong>${data.title}</strong><br><small>${data.ingredients}</small>`;
+                listDiv.appendChild(item);
+            });
+        });
+    }
 
-            <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-analytics.js";
-  // Add these two lines specifically to handle users
-  import { getAuth } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyA-re9plYFbo2hnpkt1oTwJo4ZHes6WZaU",
-    authDomain: "recipebook-fb16b.firebaseapp.com",
-    projectId: "recipebook-fb16b",
-    storageBucket: "recipebook-fb16b.firebasestorage.app",
-    messagingSenderId: "213197710946",
-    appId: "1:213197710946:web:f3a05df4fae61ac023933b",
-    measurementId: "G-6VJ0E6YKBW"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  const auth = getAuth(app); // Initialize Auth
-  const db = getFirestore(app); // Initialize Firestore
+    // 4. Logout Function
+    window.handleLogout = () => {
+        signOut(auth).then(() => {
+            window.location.href = 'index.html';
+        });
+    };
 </script>
+
+</body>
+</html>
