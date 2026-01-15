@@ -79,5 +79,19 @@
   import { getAuth } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 </script>
+<div class="login-card">
+    <h2>Recipe Login</h2>
+    <input type="email" id="email" placeholder="Email Address">
+    <input type="password" id="password" placeholder="Password">
+    
+    <button onclick="handleLogin()" class="btn-green">Login</button>
+    
+    <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 10px;">
+        <p style="font-size: 14px;">New here?</p>
+        <button onclick="handleSignUp()" style="background:none; border:1px solid #28a745; color:#28a745; padding:8px; border-radius:5px; cursor:pointer;">Create Account</button>
+    </div>
+</div>
+
+<script type="module" src="script.js"></script>
 </body>
 </html>
