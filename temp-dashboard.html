@@ -171,3 +171,26 @@
 
             <label>Folder</label>
             <select id="recipeFolderSelect"></select>
+
+            <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-analytics.js";
+  // Add these two lines specifically to handle users
+  import { getAuth } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyA-re9plYFbo2hnpkt1oTwJo4ZHes6WZaU",
+    authDomain: "recipebook-fb16b.firebaseapp.com",
+    projectId: "recipebook-fb16b",
+    storageBucket: "recipebook-fb16b.firebasestorage.app",
+    messagingSenderId: "213197710946",
+    appId: "1:213197710946:web:f3a05df4fae61ac023933b",
+    measurementId: "G-6VJ0E6YKBW"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const auth = getAuth(app); // Initialize Auth
+  const db = getFirestore(app); // Initialize Firestore
+</script>
