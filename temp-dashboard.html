@@ -143,6 +143,10 @@
             
             <label>Card Color</label>
             <div class="swatch-container" id="cardSwatches"></div>
+            <div style="display:flex; align-items:center; margin-top:10px;">
+                <input type="color" id="cardColorPicker" style="width:30px; height:30px; border:none; cursor:pointer; background:none;">
+                <button class="btn-save-swatch" onclick="window.addNewCardColor()">Save Choice</button>
+            </div>
             
             <button class="btn-blue" onclick="window.saveRecipeToCloud()" style="width:100%; margin-top:20px;">Save Recipe</button>
             <button onclick="window.closeModal()" style="width:100%; background:none; border:none; margin-top:10px; cursor:pointer;">Cancel</button>
@@ -172,7 +176,7 @@
 
         window.folders = JSON.parse(localStorage.getItem('myFolders')) || [];
         window.dashColors = JSON.parse(localStorage.getItem('dashColors')) || ['#f4f7f6', '#ffecec', '#e3f2fd', '#222222'];
-        window.cardColors = ['#ffffff', '#fff9c4', '#c8e6c9', '#ffccbc', '#e1f5fe', '#f3e5f5'];
+        window.cardColors = JSON.parse(localStorage.getItem('myCardColors')) || ['#ffffff', '#fff9c4', '#c8e6c9', '#ffccbc', '#e1f5fe', '#f3e5f5'];
         window.currentFolder = 'All';
         window.selectedCardColor = '#ffffff';
 
@@ -217,6 +221,16 @@
             }
         };
 
+        window.addNewCardColor = () => {
+            const color = document.getElementById('cardColorPicker').value;
+            if(!window.cardColors.includes(color)) {
+                window.cardColors.push(color);
+                localStorage.setItem('myCardColors', JSON.stringify(window.cardColors));
+                window.selectedCardColor = color;
+                window.renderCardSwatches();
+            }
+        };
+
         window.renderFolderUI = () => {
             const list = document.getElementById('folderList');
             const select = document.getElementById('recipeFolderSelect');
@@ -253,7 +267,6 @@
             window.displayRecipes();
         };
 
-        // RENDER CARD SWATCHES (FIXED)
         window.renderCardSwatches = () => {
             const container = document.getElementById('cardSwatches');
             container.innerHTML = "";
@@ -305,7 +318,7 @@
 
         window.openModal = () => {
             document.getElementById('recipeModal').style.display = "block";
-            window.selectedCardColor = '#ffffff'; // Default
+            window.selectedCardColor = '#ffffff'; 
             window.renderCardSwatches();
         };
         
