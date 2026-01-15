@@ -120,6 +120,7 @@
     <div class="sidebar" id="sidebar">
         <h2>Settings ⚙️</h2>
         <p id="userEmailDisplay" style="font-size: 12px; color: #aaa;"></p>
+        
         <h3>Dashboard Theme</h3>
         <div class="swatch-container" id="dashSwatches"></div>
         <div style="display:flex; align-items:center; margin-top:10px;">
@@ -128,6 +129,7 @@
         </div>
 
         <hr style="margin:25px 0; border:0; border-top:1px solid #444;">
+        
         <h3>Folders</h3>
         <div id="folderList"></div>
         <div style="display:flex; gap:5px; margin-top:10px;">
@@ -163,7 +165,7 @@
             <label>Recipe Name</label>
             <input type="text" id="recipeName" placeholder="What are we cooking?">
             
-            <label>Recipe Photo (URL for now)</label>
+            <label>Recipe Photo (URL)</label>
             <input type="text" id="recipeImageUrl" placeholder="https://image-link.com">
 
             <label>Folder</label>
@@ -188,27 +190,4 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyA-re9plYFbo2hnpkt1oTwJo4ZHes6WZaU",
-            authDomain: "recipebook-fb16b.firebaseapp.com",
-            projectId: "recipebook-fb16b",
-            storageBucket: "recipebook-fb16b.firebasestorage.app",
-            messagingSenderId: "213197710946",
-            appId: "1:213197710946:web:f3a05df4fae61ac023933b"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        let currentUser = null;
-        let cloudRecipes = [];
-
-        // UI STATE
-        window.folders = JSON.parse(localStorage.getItem('myFolders')) || [];
-        window.dashColors = JSON.parse(localStorage.getItem('dashColors')) || ['#f4f7f6', '#ffecec', '#e3f2fd', '#222222'];
-        window.cardColors = JSON.parse(localStorage.getItem('cardColors')) || ['#
+        import { initializeApp
