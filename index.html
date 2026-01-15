@@ -1,87 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Recipe Book Login</title>
+    <title>Recipe Book - Access</title>
     <style>
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            margin: 0;
-            background-color: #f4f4f4; 
-        }
-        .login-card { 
-            background: white; 
-            padding: 30px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-            text-align: center;
-            width: 320px;
-        }
-        h2 { margin-top: 0; color: #333; }
-        input { 
-            display: block; 
-            margin: 15px auto; 
-            padding: 12px; 
-            width: 100%; 
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-sizing: border-box;
-        }
-        .btn-green { 
-            background: #28a745; 
-            color: white; 
-            border: none; 
-            padding: 12px; 
-            width: 100%; 
-            border-radius: 8px;
-            cursor: pointer; 
-            font-size: 16px;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-        .btn-green:hover { background: #218838; }
-        
-        .signup-section {
-            margin-top: 20px; 
-            border-top: 1px solid #eee; 
-            padding-top: 15px;
-        }
-        .btn-outline {
-            background: none; 
-            border: 1px solid #28a745; 
-            color: #28a745; 
-            padding: 10px; 
-            width: 100%;
-            border-radius: 8px; 
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-        .btn-outline:hover {
-            background: #28a745;
-            color: white;
-        }
+        body { font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f4f4f4; }
+        .login-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 340px; }
+        h2 { margin-bottom: 20px; color: #333; }
+        input { display: block; margin: 12px auto; padding: 12px; width: 100%; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn-main { background: #28a745; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .remember-me { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 15px; color: #666; }
+        .toggle-link { color: #007bff; cursor: pointer; text-decoration: underline; font-size: 14px; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
     <div class="login-card">
-        <h2>Recipe Login</h2>
+        <h2 id="formTitle">Recipe Login</h2>
+        
         <input type="email" id="email" placeholder="Email Address">
-        <input type="password" id="password" placeholder="Password">
+        <input type="password" id="password" placeholder="Password (min 6 chars)">
         
-        <button onclick="handleLogin()" class="btn-green">Login</button>
-        
-        <div class="signup-section">
-            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">New here?</p>
-            <button onclick="handleSignUp()" class="btn-outline">Create Account</button>
+        <div class="remember-me">
+            <input type="checkbox" id="rememberMe" style="width: auto; margin: 0;">
+            <label for="rememberMe">Remember Me</label>
         </div>
+
+        <button id="mainBtn" onclick="handleAuth()" class="btn-main">Login</button>
+        
+        <p style="margin-top: 20px; font-size: 14px;">
+            <span id="toggleText">New here?</span> 
+            <span class="toggle-link" onclick="toggleForm()" id="linkText">Create Account</span>
+        </p>
     </div>
 
     <script type="module" src="script.js"></script>
 
+    <script>
+        // Visual toggle for the UI
+        let isSignUp = false;
+        function toggleForm() {
+            isSignUp = !isSignUp;
+            document.getElementById('formTitle').innerText = isSignUp ? "Create Account" : "Recipe Login";
+            document.getElementById('mainBtn').innerText = isSignUp ? "Sign Up" : "Login";
+            document.getElementById('toggleText').innerText = isSignUp ? "Have an account?" : "New here?";
+            document.getElementById('linkText').innerText = isSignUp ? "Login instead" : "Create Account";
+        }
+    </script>
 </body>
 </html>
