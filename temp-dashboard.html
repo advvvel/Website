@@ -1,151 +1,176 @@
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyA-re9plYFbo2hnpkt1oTwJo4ZHes6WZaU",
-        authDomain: "recipebook-fb16b.firebaseapp.com",
-        projectId: "recipebook-fb16b",
-        storageBucket: "recipebook-fb16b.firebasestorage.app",
-        messagingSenderId: "213197710946",
-        appId: "1:213197710946:web:f3a05df4fae61ac023933b"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    let currentUser = null;
-    let cloudRecipes = [];
-
-    // 1. AUTH WATCHER & PROTECTION
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            currentUser = user;
-            const display = document.getElementById('userEmailDisplay');
-            if(display) display.innerText = "Logged in as: " + user.email;
-            syncCloudRecipes(user.uid);
-        } else {
-            // REDIRECT: If not logged in, kick back to login page
-            window.location.href = 'index.html';
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RecipeBook Dashboard</title>
+    <style>
+        :root { 
+            --bg-color: #f4f7f6; 
+            --main-font: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
-    });
-
-    // 2. LOGOUT FUNCTION (The fix you requested)
-    window.handleLogout = async () => {
-        try {
-            await signOut(auth);
-            // Force redirect to login page after sign out
-            window.location.href = 'index.html';
-        } catch (error) {
-            console.error("Logout failed:", error);
-            alert("Error signing out.");
+        
+        body { 
+            font-family: var(--main-font); 
+            background-color: var(--bg-color); 
+            margin: 0; 
+            min-height: 100vh; 
+            transition: background 0.4s ease;
         }
-    };
 
-    // 3. REAL-TIME SYNC
-    function syncCloudRecipes(uid) {
-        const q = query(collection(db, "recipes"), where("uid", "==", uid));
-        onSnapshot(q, (snapshot) => {
-            cloudRecipes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            displayRecipes();
-        });
-    }
+        /* Navbar */
+        .navbar { 
+            background: white; padding: 15px 30px; display: flex; 
+            justify-content: space-between; align-items: center; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 900;
+        }
+        .navbar h1 { margin: 0; font-size: 24px; color: #333; }
 
-    // 4. SAVE / UPDATE
-    window.saveRecipeToCloud = async () => {
-        const docId = document.getElementById('editDocId').value;
-        const data = {
-            uid: currentUser.uid,
-            name: document.getElementById('recipeName').value,
-            folder: document.getElementById('recipeFolderSelect').value,
-            ingredients: document.getElementById('recipeIngredients').value,
-            steps: document.getElementById('recipeSteps').value,
-            cardBg: window.selectedCardColor,
-            image: document.getElementById('recipeImageUrl').value || 'https://via.placeholder.com/350x180'
+        .search-container { flex-grow: 1; margin: 0 40px; max-width: 500px; }
+        .search-input { 
+            width: 100%; padding: 10px 15px; border: 1px solid #ddd; 
+            border-radius: 20px; font-size: 14px; outline: none; 
+        }
+
+        /* Sidebar */
+        .sidebar { 
+            position: fixed; top: 0; right: -320px; width: 300px; height: 100%; 
+            background: #222; color: white; padding: 25px; transition: 0.4s ease; 
+            z-index: 1000; visibility: hidden; display: flex; flex-direction: column;
+        }
+        .sidebar.active { right: 0; visibility: visible; }
+        .sidebar-overlay { 
+            display: none; position: fixed; top:0; left:0; width:100%; height:100%; 
+            background:rgba(0,0,0,0.5); z-index: 999; 
+        }
+        .sidebar-overlay.active { display: block; }
+
+        .btn-blue { 
+            background: #007bff; color: white; border: none; padding: 10px 20px; 
+            border-radius: 8px; cursor: pointer; font-weight: bold;
+        }
+
+        .btn-logout {
+            margin-top: auto; width: 100%; padding: 12px; background: #d32f2f;
+            color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;
+        }
+
+        /* Modal & Cards */
+        .modal { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 2000; overflow-y: auto;
+        }
+        .modal-content { 
+            background: white; width: 420px; margin: 20px auto; padding: 30px; border-radius: 15px; 
+        }
+        input, textarea, select { width: 100%; margin-top: 5px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+
+        .main-content { padding: 30px; }
+        #recipeList { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
+        .card { border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); background: white; }
+        .card-img { width: 100%; height: 180px; object-fit: cover; background: #eee; }
+        .card-body { padding: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+    
+    <div class="sidebar" id="sidebar">
+        <h2>Settings ⚙️</h2>
+        <p id="userEmailDisplay" style="font-size: 13px; color: #aaa;"></p>
+        <button class="btn-logout" onclick="handleLogout()">Sign Out</button>
+        <button onclick="toggleSidebar()" style="margin-top:10px; width:100%; padding:10px; background:#555; color:white; border:none; border-radius:8px; cursor:pointer;">Close</button>
+    </div>
+
+    <div class="navbar">
+        <h1>RecipeBook</h1>
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search recipes...">
+        </div>
+        <div style="display:flex; gap:15px; align-items:center;">
+            <button class="btn-blue" onclick="openModal()">+ Create Recipe</button>
+            <button onclick="toggleSidebar()" style="background:none; border:none; font-size:24px; cursor:pointer;">⚙️</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <h2 id="currentFolderTitle">All Recipes</h2>
+        <div id="recipeList">Loading your cloud recipes...</div>
+    </div>
+
+    <div id="recipeModal" class="modal">
+        <div class="modal-content">
+            <h2>Recipe Info</h2>
+            <input type="text" id="recipeName" placeholder="Recipe Name">
+            <textarea id="recipeIngredients" rows="3" placeholder="Ingredients"></textarea>
+            <textarea id="recipeSteps" rows="3" placeholder="Instructions"></textarea>
+            <button class="btn-blue" onclick="saveRecipeToCloud()" style="width:100%; margin-top:20px;">Save Recipe</button>
+            <button onclick="closeModal()" style="width:100%; background:none; border:none; margin-top:10px; cursor:pointer;">Cancel</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA-re9plYFbo2hnpkt1oTwJo4ZHes6WZaU",
+            authDomain: "recipebook-fb16b.firebaseapp.com",
+            projectId: "recipebook-fb16b",
+            storageBucket: "recipebook-fb16b.firebasestorage.app",
+            messagingSenderId: "213197710946",
+            appId: "1:213197710946:web:f3a05df4fae61ac023933b"
         };
 
-        try {
-            if (docId) {
-                await updateDoc(doc(db, "recipes", docId), data);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let currentUser = null;
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('userEmailDisplay').innerText = user.email;
+                syncRecipes(user.uid);
             } else {
-                await addDoc(collection(db, "recipes"), data);
+                window.location.href = 'index.html';
             }
-            closeModal();
-        } catch (e) { alert("Error saving: " + e.message); }
-    };
-
-    // 5. DELETE
-    window.deleteRecipeFromCloud = async (id) => {
-        if (confirm("Delete this recipe forever?")) {
-            await deleteDoc(doc(db, "recipes", id));
-        }
-    };
-
-    // 6. DISPLAY LOGIC
-    window.displayRecipes = () => {
-        const list = document.getElementById('recipeList');
-        const search = document.getElementById('searchInput').value.toLowerCase();
-        list.innerHTML = "";
-        
-        let filtered = window.currentFolder === 'All' ? cloudRecipes : cloudRecipes.filter(r => r.folder === window.currentFolder);
-        filtered = filtered.filter(r => r.name.toLowerCase().includes(search));
-
-        filtered.forEach((r) => {
-            const stepItems = r.steps.split('\n').filter(s => s.trim() !== "").map(s => `<li>${s}</li>`).join('');
-            list.innerHTML += `
-                <div class="card" style="background:${r.cardBg}">
-                    <img src="${r.image}" class="card-img">
-                    <div class="card-body">
-                        <h2 style="margin:0;">${r.name}</h2>
-                        <div class="section-title">Ingredients</div>
-                        <p style="white-space: pre-wrap; font-size:14px;">${r.ingredients}</p>
-                        <div class="section-title">Instructions</div>
-                        <ol class="steps-list" style="font-size:14px;">${stepItems}</ol>
-                        <div style="display:flex; gap:10px; margin-top:15px;">
-                            <button onclick="openModal('${r.id}')" style="flex:1; cursor:pointer; border:none; background:rgba(0,0,0,0.1); padding:8px; border-radius:5px;">Edit</button>
-                            <button onclick="deleteRecipeFromCloud('${r.id}')" style="flex:1; cursor:pointer; border:none; background:rgba(255,0,0,0.1); color:#d32f2f; padding:8px; border-radius:5px;">Delete</button>
-                        </div>
-                    </div>
-                </div>`;
         });
-    };
 
-    // UI State Helpers
-    window.openModal = (id = "") => {
-        document.getElementById('recipeModal').style.display = "block";
-        if (id && typeof id === 'string') {
-            const r = cloudRecipes.find(x => x.id === id);
-            document.getElementById('editDocId').value = id;
-            document.getElementById('recipeName').value = r.name;
-            document.getElementById('recipeFolderSelect').value = r.folder;
-            document.getElementById('recipeIngredients').value = r.ingredients;
-            document.getElementById('recipeSteps').value = r.steps;
-            document.getElementById('recipeImageUrl').value = r.image;
-            window.selectedCardColor = r.cardBg;
-        } else {
-            document.getElementById('editDocId').value = "";
-            document.getElementById('recipeName').value = "";
-            document.getElementById('recipeIngredients').value = "";
-            document.getElementById('recipeSteps').value = "";
-            document.getElementById('recipeImageUrl').value = "";
-            window.selectedCardColor = '#ffffff';
+        function syncRecipes(uid) {
+            const q = query(collection(db, "recipes"), where("uid", "==", uid));
+            onSnapshot(q, (snapshot) => {
+                const list = document.getElementById('recipeList');
+                list.innerHTML = "";
+                snapshot.forEach((doc) => {
+                    const r = doc.data();
+                    list.innerHTML += `<div class="card"><div class="card-body"><h3>${r.name}</h3><p>${r.ingredients}</p></div></div>`;
+                });
+                if(snapshot.empty) list.innerHTML = "No recipes yet!";
+            });
         }
-        renderCardSwatches();
-    };
 
-    window.closeModal = () => document.getElementById('recipeModal').style.display = "none";
+        window.handleLogout = async () => {
+            await signOut(auth);
+            window.location.href = 'index.html';
+        };
 
-    window.filterFolder = (name) => {
-        window.currentFolder = name;
-        document.getElementById('currentFolderTitle').innerText = name;
-        if(window.toggleSidebar) window.toggleSidebar();
-        displayRecipes();
-    };
+        window.saveRecipeToCloud = async () => {
+            await addDoc(collection(db, "recipes"), {
+                uid: currentUser.uid,
+                name: document.getElementById('recipeName').value,
+                ingredients: document.getElementById('recipeIngredients').value,
+                steps: document.getElementById('recipeSteps').value
+            });
+            closeModal();
+        };
 
-    // Initialize UI
-    if(window.renderDashSwatches) window.renderDashSwatches();
-    if(window.renderFolderUI) window.renderFolderUI();
-    document.getElementById('searchInput').addEventListener('keyup', displayRecipes);
-</script>
+        window.toggleSidebar = () => {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        };
+        window.openModal = () => document.getElementById('recipeModal').style.display = "block";
+        window.closeModal = () => document.getElementById('recipeModal').style.display = "none";
+    </script>
+</body>
+</html>
