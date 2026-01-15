@@ -3,7 +3,6 @@
 <head>
     <title>Recipe Book Login</title>
     <style>
-        /* Centers the login card on the screen */
         body { 
             font-family: 'Segoe UI', sans-serif; 
             display: flex; 
@@ -19,17 +18,19 @@
             border-radius: 12px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
             text-align: center;
+            width: 320px;
         }
         h2 { margin-top: 0; color: #333; }
         input { 
             display: block; 
             margin: 15px auto; 
             padding: 12px; 
-            width: 250px; 
+            width: 100%; 
             border: 1px solid #ddd;
             border-radius: 8px;
+            box-sizing: border-box;
         }
-        button { 
+        .btn-green { 
             background: #28a745; 
             color: white; 
             border: none; 
@@ -41,8 +42,27 @@
             font-weight: bold;
             transition: background 0.3s;
         }
-        button:hover {
-            background: #218838;
+        .btn-green:hover { background: #218838; }
+        
+        .signup-section {
+            margin-top: 20px; 
+            border-top: 1px solid #eee; 
+            padding-top: 15px;
+        }
+        .btn-outline {
+            background: none; 
+            border: 1px solid #28a745; 
+            color: #28a745; 
+            padding: 10px; 
+            width: 100%;
+            border-radius: 8px; 
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-outline:hover {
+            background: #28a745;
+            color: white;
         }
     </style>
 </head>
@@ -50,48 +70,18 @@
 
     <div class="login-card">
         <h2>Recipe Login</h2>
-        <input type="text" placeholder="Username">
-        <input type="password" placeholder="Password">
-        <button onclick="window.location.href = 'temp-dashboard.html'">Login</button>
+        <input type="email" id="email" placeholder="Email Address">
+        <input type="password" id="password" placeholder="Password">
+        
+        <button onclick="handleLogin()" class="btn-green">Login</button>
+        
+        <div class="signup-section">
+            <p style="font-size: 14px; color: #666; margin-bottom: 10px;">New here?</p>
+            <button onclick="handleSignUp()" class="btn-outline">Create Account</button>
+        </div>
     </div>
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyA-re9plYFbo2hnpkt1oTwJo4ZHes6WZaU",
-    authDomain: "recipebook-fb16b.firebaseapp.com",
-    projectId: "recipebook-fb16b",
-    storageBucket: "recipebook-fb16b.firebasestorage.app",
-    messagingSenderId: "213197710946",
-    appId: "1:213197710946:web:f3a05df4fae61ac023933b",
-    measurementId: "G-6VJ0E6YKBW"
-  };
+    <script type="module" src="script.js"></script>
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  import { getAuth } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
-</script>
-<div class="login-card">
-    <h2>Recipe Login</h2>
-    <input type="email" id="email" placeholder="Email Address">
-    <input type="password" id="password" placeholder="Password">
-    
-    <button onclick="handleLogin()" class="btn-green">Login</button>
-    
-    <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 10px;">
-        <p style="font-size: 14px;">New here?</p>
-        <button onclick="handleSignUp()" style="background:none; border:1px solid #28a745; color:#28a745; padding:8px; border-radius:5px; cursor:pointer;">Create Account</button>
-    </div>
-</div>
-
-<script type="module" src="script.js"></script>
 </body>
 </html>
