@@ -1,130 +1,375 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Recipe Book - Dashboard</title>
+    <title>RecipeBook Dashboard</title>
     <style>
-        /* Restoring your original website look */
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background-color: #f4f4f4; color: #333; }
-        nav { background: #28a745; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .main-container { max-width: 1000px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+        :root { 
+            --bg-color: #f4f7f6; 
+            --main-font: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
         
-        /* Sidebar Form */
-        .recipe-form { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); height: fit-content; }
-        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-        .btn-add { background: #28a745; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
-        .btn-add:hover { background: #218838; }
+        body { 
+            font-family: var(--main-font); 
+            background-color: var(--bg-color); 
+            margin: 0; 
+            min-height: 100vh; 
+            transition: background 0.4s ease;
+        }
 
-        /* Recipe Feed */
-        .feed { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .recipe-card { border-bottom: 1px solid #eee; padding: 15px 0; animation: fadeIn 0.5s ease; }
-        .recipe-card:last-child { border: none; }
-        .recipe-card h3 { margin: 0 0 10px 0; color: #28a745; }
-        .recipe-card p { margin: 0; font-size: 14px; line-height: 1.6; color: #666; }
+        /* Navbar */
+        .navbar { 
+            background: white; 
+            padding: 15px 30px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            position: sticky;
+            top: 0;
+            z-index: 900;
+        }
+        .navbar h1 { margin: 0; font-size: 24px; color: #333; }
+
+        /* Search Bar Styling */
+        .search-container {
+            flex-grow: 1;
+            margin: 0 40px;
+            max-width: 500px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .search-input:focus { border-color: #007bff; }
+
+        /* Sidebar */
+        .sidebar { 
+            position: fixed; top: 0; right: -320px; width: 300px; height: 100%; 
+            background: #222; color: white; padding: 25px; transition: 0.4s ease; 
+            z-index: 1000; visibility: hidden; box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar.active { right: 0; visibility: visible; }
+        .sidebar-overlay { 
+            display: none; position: fixed; top:0; left:0; width:100%; height:100%; 
+            background:rgba(0,0,0,0.5); z-index: 999; 
+        }
+        .sidebar-overlay.active { display: block; }
+
+        .swatch-container { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+        .color-swatch { 
+            width: 30px; height: 30px; border-radius: 6px; cursor: pointer; 
+            border: 2px solid transparent; transition: 0.2s; 
+        }
+        .color-swatch:hover, .color-swatch.selected { border-color: #007bff; transform: scale(1.1); }
         
-        .logout-link { color: white; cursor: pointer; text-decoration: underline; font-size: 14px; }
+        .btn-blue { 
+            background: #007bff; color: white; border: none; padding: 10px 20px; 
+            border-radius: 8px; cursor: pointer; font-family: var(--main-font); font-weight: bold;
+        }
+        .btn-save-swatch {
+            background: #444; color: white; border: none; padding: 5px 12px; 
+            border-radius: 15px; cursor: pointer; font-size: 12px; margin-left: 10px;
+        }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-logout {
+            margin-top: auto; /* Pushes button to bottom */
+            width: 100%;
+            padding: 12px;
+            background: #d32f2f;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-logout:hover { background: #b71c1c; }
+
+        /* Modal */
+        .modal { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 2000; overflow-y: auto;
+        }
+        .modal-content { 
+            background: white; width: 420px; margin: 20px auto; padding: 30px; 
+            border-radius: 15px; font-family: var(--main-font); 
+        }
+        .modal-content label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; }
+        input, textarea, select { 
+            width: 100%; margin-top: 5px; padding: 10px; border: 1px solid #ddd; 
+            border-radius: 8px; box-sizing: border-box; font-family: var(--main-font);
+        }
+
+        /* Recipe Cards */
+        .main-content { padding: 30px; }
+        #recipeList { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
+        .card { border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        .card-img { width: 100%; height: 180px; object-fit: cover; background: #eee; }
+        .card-body { padding: 20px; }
+        .section-title { font-weight: bold; margin-top: 15px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 3px; }
+        .steps-list { padding-left: 20px; margin-top: 8px; }
     </style>
 </head>
 <body>
 
-    <nav>
-        <h2 style="margin:0;">RecipeBook</h2>
-        <div>
-            <span id="userDisplay" style="margin-right: 15px; font-size: 14px;"></span>
-            <span class="logout-link" onclick="handleLogout()">Logout</span>
-        </div>
-    </nav>
-
-    <div class="main-container">
-        <div class="recipe-form">
-            <h3>Add New Recipe</h3>
-            <input type="text" id="recipeTitle" placeholder="Recipe Name (e.g., Spicy Tacos)">
-            <textarea id="recipeIngredients" rows="5" placeholder="List ingredients and steps here..."></textarea>
-            <button class="btn-add" onclick="saveRecipe()">Save to My Book</button>
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+    
+    <div class="sidebar" id="sidebar">
+        <h2>Settings ⚙️</h2>
+        <h3>Dashboard Theme</h3>
+        <div class="swatch-container" id="dashSwatches"></div>
+        <div style="display:flex; align-items:center; margin-top:10px;">
+            <input type="color" id="dashColorPicker" style="width:30px; height:30px; border:none; cursor:pointer; background:none;">
+            <button class="btn-save-swatch" onclick="addNewDashColor()">Save Color</button>
         </div>
 
-        <div class="feed">
-            <h3>My Saved Recipes</h3>
-            <div id="listContent">Connecting to cloud...</div>
+        <hr style="margin:25px 0; border:0; border-top:1px solid #444;">
+        <h3>Folders</h3>
+        <div id="folderList"></div>
+        <div style="display:flex; gap:5px; margin-top:10px;">
+            <input type="text" id="newFolderName" placeholder="Folder name..." style="background:#333; color:white; border:none; padding:8px; border-radius:5px;">
+            <button onclick="addFolder()" style="cursor:pointer; background:#555; border:none; color:white; padding:0 12px; border-radius:5px;">+</button>
+        </div>
+        
+        <button class="btn-logout" onclick="handleLogout()">Sign Out</button>
+        <button onclick="toggleSidebar()" style="margin-top:10px; width:100%; padding:10px; background:#555; color:white; border:none; border-radius:8px; cursor:pointer;">Close</button>
+    </div>
+
+    <div class="navbar">
+        <h1>RecipeBook</h1>
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search recipes by name..." onkeyup="displayRecipes()">
+        </div>
+        <div style="display:flex; gap:15px; align-items:center;">
+            <button class="btn-blue" onclick="openModal()">+ Create Recipe</button>
+            <button onclick="toggleSidebar()" style="background:none; border:none; font-size:24px; cursor:pointer;">⚙️</button>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+    <div class="main-content">
+        <h2 id="currentFolderTitle">All Recipes</h2>
+        <div id="recipeList"></div>
+    </div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyA-re9plYFbo2hnpkt1oTwJo4ZHes6WZaU",
-            authDomain: "recipebook-fb16b.firebaseapp.com",
-            projectId: "recipebook-fb16b",
-            storageBucket: "recipebook-fb16b.firebasestorage.app",
-            messagingSenderId: "213197710946",
-            appId: "1:213197710946:web:f3a05df4fae61ac023933b"
-        };
+    <div id="recipeModal" class="modal">
+        <div class="modal-content">
+            <h2>Recipe Info</h2>
+            <input type="hidden" id="editIndex">
+            
+            <label>Recipe Name</label>
+            <input type="text" id="recipeName" placeholder="What are we cooking?">
+            
+            <label>Recipe Photo (Upload)</label>
+            <input type="file" id="recipeImageFile" accept="image/*">
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        let currentUser = null;
+            <label>Folder</label>
+            <select id="recipeFolderSelect"></select>
+            
+            <label>Ingredients</label>
+            <textarea id="recipeIngredients" rows="2" placeholder="Item 1, Item 2..."></textarea>
+            
+            <label>Instructions</label>
+            <textarea id="recipeSteps" rows="3" placeholder="Step 1&#10;Step 2"></textarea>
+            
+            <label>Card Color</label>
+            <div class="swatch-container" id="cardSwatches"></div>
+            <div style="display:flex; align-items:center;">
+                <input type="color" id="cardColorPicker" style="width:30px; height:30px; border:none; cursor:pointer; background:none;">
+                <button class="btn-save-swatch" onclick="addNewCardColor()">Save Color</button>
+            </div>
 
-        // AUTH CHECK
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                document.getElementById('userDisplay').innerText = user.email;
-                loadRecipes(user.uid);
-            } else {
-                window.location.href = 'index.html';
-            }
-        });
+            <button class="btn-blue" onclick="saveRecipe()" style="width:100%; margin-top:20px;">Save Recipe</button>
+            <button onclick="closeModal()" style="width:100%; background:none; border:none; margin-top:10px; cursor:pointer;">Cancel</button>
+        </div>
+    </div>
 
-        // SAVE LOGIC
-        window.saveRecipe = async () => {
-            const title = document.getElementById('recipeTitle').value;
-            const text = document.getElementById('recipeIngredients').value;
+    <script type="module" src="script.js"></script>
 
-            if (!title || !text) return alert("Please fill in both fields!");
+    <script>
+        let recipes = JSON.parse(localStorage.getItem('myRecipes')) || [];
+        let folders = JSON.parse(localStorage.getItem('myFolders')) || [];
+        let dashColors = JSON.parse(localStorage.getItem('dashColors')) || ['#f4f7f6', '#ffecec', '#e3f2fd', '#222222'];
+        let cardColors = JSON.parse(localStorage.getItem('cardColors')) || ['#ffffff', '#fff9c4', '#c8e6c9', '#ffccbc'];
+        let currentFolder = 'All';
+        let selectedCardColor = '#ffffff';
 
-            try {
-                await addDoc(collection(db, "recipes"), {
-                    uid: currentUser.uid,
-                    title: title,
-                    ingredients: text,
-                    createdAt: new Date()
-                });
-                document.getElementById('recipeTitle').value = "";
-                document.getElementById('recipeIngredients').value = "";
-            } catch (e) {
-                alert("Error saving recipe. Check your Database Rules!");
-            }
-        };
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
 
-        // LOAD LOGIC
-        function loadRecipes(uid) {
-            const q = query(collection(db, "recipes"), where("uid", "==", uid));
-            onSnapshot(q, (snapshot) => {
-                const listDiv = document.getElementById('listContent');
-                listDiv.innerHTML = "";
-                
-                if (snapshot.empty) {
-                    listDiv.innerHTML = "<p>No recipes found. Start adding some!</p>";
-                    return;
-                }
-
-                snapshot.forEach((doc) => {
-                    const r = doc.data();
-                    const card = document.createElement('div');
-                    card.className = "recipe-card";
-                    card.innerHTML = `<h3>${r.title}</h3><p>${r.ingredients.replace(/\n/g, '<br>')}</p>`;
-                    listDiv.appendChild(card);
-                });
+        function renderDashSwatches() {
+            const container = document.getElementById('dashSwatches');
+            container.innerHTML = "";
+            dashColors.forEach(color => {
+                const div = document.createElement('div');
+                div.className = 'color-swatch';
+                div.style.background = color;
+                div.onclick = () => {
+                    document.documentElement.style.setProperty('--bg-color', color);
+                    localStorage.setItem('globalBg', color);
+                };
+                container.appendChild(div);
             });
         }
 
-        // LOGOUT
-        window.handleLogout = () => signOut(auth);
+        function addNewDashColor() {
+            const color = document.getElementById('dashColorPicker').value;
+            if(!dashColors.includes(color)) {
+                dashColors.push(color);
+                localStorage.setItem('dashColors', JSON.stringify(dashColors));
+                renderDashSwatches();
+            }
+        }
+
+        function addFolder() {
+            const name = document.getElementById('newFolderName').value;
+            if (name && !folders.includes(name)) {
+                folders.push(name);
+                saveFolders();
+                document.getElementById('newFolderName').value = "";
+            }
+        }
+
+        function saveFolders() {
+            localStorage.setItem('myFolders', JSON.stringify(folders));
+            renderFolderUI();
+        }
+
+        function renderFolderUI() {
+            const list = document.getElementById('folderList');
+            const select = document.getElementById('recipeFolderSelect');
+            list.innerHTML = `<div onclick="filterFolder('All')" style="cursor:pointer; padding:8px;">All Recipes</div>`;
+            select.innerHTML = `<option value="All">All Recipes</option>`;
+            folders.forEach((f, i) => {
+                list.innerHTML += `<div style="display:flex; justify-content:space-between; padding:8px;">
+                    <span onclick="filterFolder('${f}')" style="cursor:pointer;">${f}</span>
+                    <span onclick="deleteFolder(${i})" style="color:red; cursor:pointer;">×</span>
+                </div>`;
+                select.innerHTML += `<option value="${f}">${f}</option>`;
+            });
+        }
+
+        function deleteFolder(idx) {
+            folders.splice(idx, 1);
+            saveFolders();
+        }
+
+        function filterFolder(name) {
+            currentFolder = name;
+            document.getElementById('currentFolderTitle').innerText = name;
+            toggleSidebar();
+            displayRecipes();
+        }
+
+        function renderCardSwatches() {
+            const container = document.getElementById('cardSwatches');
+            container.innerHTML = "";
+            cardColors.forEach(color => {
+                const div = document.createElement('div');
+                div.className = 'color-swatch' + (selectedCardColor === color ? ' selected' : '');
+                div.style.background = color;
+                div.onclick = () => { selectedCardColor = color; renderCardSwatches(); };
+                container.appendChild(div);
+            });
+        }
+
+        function addNewCardColor() {
+            const color = document.getElementById('cardColorPicker').value;
+            if(!cardColors.includes(color)) {
+                cardColors.push(color);
+                localStorage.setItem('cardColors', JSON.stringify(cardColors));
+                renderCardSwatches();
+            }
+        }
+
+        function openModal(index = -1) {
+            document.getElementById('recipeModal').style.display = "block";
+            if (index > -1) {
+                const r = recipes[index];
+                document.getElementById('recipeName').value = r.name;
+                document.getElementById('recipeFolderSelect').value = r.folder;
+                document.getElementById('recipeIngredients').value = r.ingredients;
+                document.getElementById('recipeSteps').value = r.steps;
+                selectedCardColor = r.cardBg;
+                document.getElementById('editIndex').value = index;
+            } else {
+                document.getElementById('editIndex').value = -1;
+                document.getElementById('recipeName').value = "";
+                document.getElementById('recipeIngredients').value = "";
+                document.getElementById('recipeSteps').value = "";
+                selectedCardColor = '#ffffff';
+            }
+            renderCardSwatches();
+        }
+
+        function closeModal() { document.getElementById('recipeModal').style.display = "none"; }
+
+        function saveRecipe() {
+            // Note: Cloud image upload will be handled by the logic in script.js
+            const data = {
+                name: document.getElementById('recipeName').value,
+                folder: document.getElementById('recipeFolderSelect').value,
+                ingredients: document.getElementById('recipeIngredients').value,
+                steps: document.getElementById('recipeSteps').value,
+                cardBg: selectedCardColor,
+                image: 'https://via.placeholder.com/350x180' // Temporary placeholder
+            };
+            const idx = document.getElementById('editIndex').value;
+            if (idx > -1) recipes[idx] = data; else recipes.push(data);
+            localStorage.setItem('myRecipes', JSON.stringify(recipes));
+            closeModal();
+            displayRecipes();
+        }
+
+        function deleteRecipe(index) {
+            if (confirm("Delete this recipe?")) {
+                recipes.splice(index, 1);
+                localStorage.setItem('myRecipes', JSON.stringify(recipes));
+                displayRecipes();
+            }
+        }
+
+        function displayRecipes() {
+            const list = document.getElementById('recipeList');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            list.innerHTML = "";
+            
+            let filtered = currentFolder === 'All' ? recipes : recipes.filter(r => r.folder === currentFolder);
+            filtered = filtered.filter(r => r.name.toLowerCase().includes(searchTerm));
+
+            filtered.forEach((r) => {
+                const actualIndex = recipes.indexOf(r);
+                const stepItems = r.steps.split('\n').filter(s => s.trim() !== "").map(s => `<li>${s}</li>`).join('');
+                list.innerHTML += `
+                    <div class="card" style="background:${r.cardBg}">
+                        <img src="${r.image}" class="card-img">
+                        <div class="card-body">
+                            <h2 style="margin:0;">${r.name}</h2>
+                            <div class="section-title">Ingredients</div>
+                            <p style="white-space: pre-wrap; font-size:14px;">${r.ingredients}</p>
+                            <div class="section-title">Instructions</div>
+                            <ol class="steps-list" style="font-size:14px;">${stepItems}</ol>
+                            <div style="display:flex; gap:10px; margin-top:15px;">
+                                <button onclick="openModal(${actualIndex})" style="flex:1; cursor:pointer; border:none; background:rgba(0,0,0,0.1); padding:8px; border-radius:5px;">Edit</button>
+                                <button onclick="deleteRecipe(${actualIndex})" style="flex:1; cursor:pointer; border:none; background:rgba(255,0,0,0.1); color:#d32f2f; padding:8px; border-radius:5px;">Delete</button>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        if(localStorage.getItem('globalBg')) document.documentElement.style.setProperty('--bg-color', localStorage.getItem('globalBg'));
+        renderDashSwatches();
+        renderFolderUI();
+        displayRecipes();
     </script>
 </body>
 </html>
